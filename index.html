@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Photobook Batari Volume 1</title>
+<title>Album Keluarga</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -45,6 +45,7 @@ body{
     cursor:pointer;
     z-index:1000;
     display:none;
+    user-select:none;
 }
 
 /* Stage */
@@ -57,18 +58,18 @@ body{
     overflow:hidden;
 }
 
-/* Wrapper scaling */
+/* Wrapper scaling (biar stabil & no jumping) */
 .scale-wrapper{
     transform-origin:center center;
 }
 
-/* Flipbook ukuran asli (fixed, tidak stretch) */
+/* Ukuran asli buku (fixed, no stretch) */
 #flipbook{
-    width:1308px;  /* 654 x 2 halaman */
+    width:1308px;   /* 654 x 2 */
     height:600px;
 }
 
-/* Page style */
+/* Page */
 .page{
     background:#f8f6f2;
     border:0px solid #e5e2dc;
@@ -113,7 +114,7 @@ for(let i=1;i<=80;i++){
     flipbook.appendChild(page);
 }
 
-/* Init FIXED (tidak stretch) */
+/* Init FIXED (biar stabil, no jumping) */
 const pageFlip = new St.PageFlip(flipbook, {
     width:654,
     height:600,
@@ -126,36 +127,42 @@ const pageFlip = new St.PageFlip(flipbook, {
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-/* Responsive scaling manual (tanpa reflow engine) */
+/* Responsive scaling manual */
 function scaleBook(){
     const scaleX = window.innerWidth / 1308;
     const scaleY = window.innerHeight / 600;
     const scale = Math.min(scaleX, scaleY) * 0.95;
     wrapper.style.transform = `scale(${scale})`;
 }
-
 window.addEventListener("resize", scaleBook);
 scaleBook();
 
-/* FULLSCREEN */
+/* Safari-safe Fullscreen */
 const overlay = document.getElementById("startOverlay");
 const exitBtn = document.getElementById("exitBtn");
 
+function isIOS() {
+    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 overlay.addEventListener("click", () => {
-    document.documentElement.requestFullscreen();
+
     overlay.style.display = "none";
     exitBtn.style.display = "block";
+
+    if (!isIOS()) {
+        document.documentElement.requestFullscreen();
+    }
 });
 
 exitBtn.addEventListener("click", () => {
-    document.exitFullscreen();
-});
 
-document.addEventListener("fullscreenchange", () => {
-    if (!document.fullscreenElement) {
-        overlay.style.display = "flex";
-        exitBtn.style.display = "none";
+    if (!isIOS()) {
+        document.exitFullscreen();
     }
+
+    overlay.style.display = "flex";
+    exitBtn.style.display = "none";
 });
 </script>
 
