@@ -5,7 +5,7 @@
 <title>Album Keluarga</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Playfair+Display:wght@400&display=swap" rel="stylesheet">
 
 <style>
 html,body{
@@ -13,7 +13,6 @@ html,body{
     height:100%;
     overflow:hidden;
     background:#000;
-    font-family:'Abril Fatface', serif;
 }
 
 /* ================= SPLASH ================= */
@@ -39,11 +38,11 @@ html,body{
 }
 
 .phone-rotate{
-    width:60px;
-    height:100px;
-    border:3px solid white;
-    border-radius:15px;
-    margin-bottom:30px;
+    width:50px;
+    height:85px;
+    border:2px solid white;
+    border-radius:14px;
+    margin-bottom:25px;
     animation:rotatePhone 3s infinite ease-in-out;
 }
 
@@ -54,12 +53,15 @@ html,body{
 }
 
 .title{
-    font-size:42px;
-    margin-bottom:20px;
+    font-family:'Abril Fatface', serif;
+    font-size:34px; /* lebih kecil */
+    margin-bottom:16px;
 }
 
 .subtitle{
-    font-size:18px;
+    font-family:'Playfair Display', serif;
+    font-weight:400; /* regular */
+    font-size:15px;
     line-height:1.6;
     opacity:0.85;
 }
@@ -69,7 +71,7 @@ html,body{
 #fireflyCanvas{
     position:fixed;
     inset:0;
-    z-index:101; /* di atas overlay background */
+    z-index:101;
     pointer-events:none;
 }
 
@@ -108,7 +110,6 @@ html,body{
 
 <body>
 
-<!-- Canvas SEKARANG di atas background -->
 <canvas id="fireflyCanvas"></canvas>
 
 <div id="startOverlay">
@@ -148,31 +149,37 @@ window.addEventListener("resize",resize);
 class Firefly{
     constructor(){ this.reset(); }
     reset(){
-        this.x=Math.random()*w;
-        this.y=Math.random()*h;
-        this.r=Math.random()*2+1;
-        this.vx=(Math.random()-0.5)*0.6;
-        this.vy=(Math.random()-0.5)*0.6;
+        this.size = Math.random()*6+6; // lebih besar
+        this.side = Math.floor(Math.random()*4);
+
+        if(this.side===0){ this.x=-20; this.y=Math.random()*h; }
+        if(this.side===1){ this.x=w+20; this.y=Math.random()*h; }
+        if(this.side===2){ this.x=Math.random()*w; this.y=-20; }
+        if(this.side===3){ this.x=Math.random()*w; this.y=h+20; }
+
+        this.vx=(Math.random()-0.5)*0.7;
+        this.vy=(Math.random()-0.5)*0.7;
     }
     update(){
         this.x+=this.vx*speedMultiplier;
         this.y+=this.vy*speedMultiplier;
-        if(this.x<0||this.x>w||this.y<0||this.y>h){
+
+        if(this.x<-40||this.x>w+40||this.y<-40||this.y>h+40){
             this.reset();
         }
     }
     draw(){
         ctx.beginPath();
-        ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-        ctx.fillStyle="rgba(255,220,100,0.9)";
-        ctx.shadowColor="rgba(255,220,100,0.8)";
-        ctx.shadowBlur=15;
+        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+        ctx.fillStyle="rgba(255,215,90,0.95)";
+        ctx.shadowColor="rgba(255,215,90,0.8)";
+        ctx.shadowBlur=25;
         ctx.fill();
     }
 }
 
 const fireflies=[];
-for(let i=0;i<60;i++){
+for(let i=0;i<5;i++){  // maksimal 5
     fireflies.push(new Firefly());
 }
 
@@ -191,13 +198,12 @@ animate();
 const overlay=document.getElementById("startOverlay");
 
 overlay.addEventListener("click",()=>{
-    speedMultiplier=6; // terbang cepat
-
+    speedMultiplier=4;
     overlay.classList.add("exit");
 
     setTimeout(()=>{
         overlay.style.display="none";
-        canvas.style.display="none"; // hilangkan kunang-kunang setelah splash
+        canvas.style.display="none";
     },600);
 });
 
