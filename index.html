@@ -84,6 +84,9 @@ body{
 <div id="startOverlay">BUKA ALBUM</div>
 <div id="exitBtn">✕</div>
 
+<!-- AUDIO ELEMENT LANGSUNG -->
+<audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
+
 <div class="stage">
     <div class="scale-wrapper">
         <div id="flipbook"></div>
@@ -95,53 +98,32 @@ body{
 <script>
 const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
+const flipAudio = document.getElementById("flipAudio");
 
-/* ===================== */
-/* SAFARI SAFE WEB AUDIO */
-/* ===================== */
+flipAudio.volume = 0.25;
 
-let audioContext = null;
-let flipBuffer = null;
-let audioReady = false;
+let audioUnlocked = false;
 
-async function setupAudio() {
-    try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+/* Unlock audio via real user gesture */
+function unlockAudio() {
+    if (audioUnlocked) return;
 
-        const response = await fetch("sounds/flip3.mp3");
-        const arrayBuffer = await response.arrayBuffer();
-        flipBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-        if (audioContext.state === "suspended") {
-            await audioContext.resume();
-        }
-
-        audioReady = true;
-        console.log("Audio ready");
-    } catch (err) {
-        console.log("Audio failed:", err);
-    }
+    flipAudio.play().then(() => {
+        flipAudio.pause();
+        flipAudio.currentTime = 0;
+        audioUnlocked = true;
+    }).catch(() => {});
 }
 
-function playFlipSound() {
-    if (!audioReady || !flipBuffer) return;
+/* Play sound */
+function playFlipSound(){
+    if (!audioUnlocked) return;
 
-    const source = audioContext.createBufferSource();
-    const gainNode = audioContext.createGain();
-
-    source.buffer = flipBuffer;
-    gainNode.gain.value = 0.25;
-
-    source.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    source.start(0);
+    flipAudio.currentTime = 0;
+    flipAudio.play();
 }
 
-/* ===================== */
 /* Generate halaman */
-/* ===================== */
-
 for(let i=1;i<=80;i++){
     const page = document.createElement("div");
     page.classList.add("page");
@@ -167,6 +149,7 @@ const pageFlip = new St.PageFlip(flipbook, {
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
+/* Panggil saat animasi mulai */
 pageFlip.on("changeState", (e) => {
     if (e.data === "flipping") {
         playFlipSound();
@@ -185,7 +168,7 @@ flipbook.addEventListener("click", (e) => {
     }
 });
 
-/* Responsive scaling */
+/* Responsive */
 function scaleBook(){
     const scaleX = window.innerWidth / 1308;
     const scaleY = window.innerHeight / 600;
@@ -195,10 +178,7 @@ function scaleBook(){
 window.addEventListener("resize", scaleBook);
 scaleBook();
 
-/* ===================== */
-/* FULLSCREEN + INIT AUDIO */
-/* ===================== */
-
+/* Fullscreen + Unlock */
 const overlay = document.getElementById("startOverlay");
 const exitBtn = document.getElementById("exitBtn");
 
@@ -206,14 +186,12 @@ function isIOS() {
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-overlay.addEventListener("click", async () => {
+overlay.addEventListener("click", () => {
+
+    unlockAudio(); // ini penting banget
 
     overlay.style.display = "none";
     exitBtn.style.display = "block";
-
-    if (!audioReady) {
-        await setupAudio();
-    }
 
     if (!isIOS()) {
         document.documentElement.requestFullscreen();
