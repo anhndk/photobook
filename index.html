@@ -135,34 +135,25 @@ const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
 
 /* ===================== */
-/* SOUND SETUP - SAFARI PROOF */
+/* SINGLE SOUND - SAFARI PROOF */
 /* ===================== */
 
-const flipSounds = [
-    new Audio("sounds/flip1.mp3"),
-    new Audio("sounds/flip1.mp3"),
-    new Audio("sounds/flip1.mp3")
-];
+const flipSound = new Audio("sounds/flip1.mp3");
+flipSound.volume = 0.25;
+flipSound.preload = "auto";
 
 let audioUnlocked = false;
-
-flipSounds.forEach(sound => {
-    sound.volume = 0.25;
-    sound.preload = "auto";
-});
 
 function unlockAudio() {
     if (audioUnlocked) return;
 
-    flipSounds.forEach(sound => {
-        const playPromise = sound.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                sound.pause();
-                sound.currentTime = 0;
-            }).catch(() => {});
-        }
-    });
+    const playPromise = flipSound.play();
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            flipSound.pause();
+            flipSound.currentTime = 0;
+        }).catch(() => {});
+    }
 
     audioUnlocked = true;
 }
@@ -170,11 +161,8 @@ function unlockAudio() {
 function playFlipSound(){
     if (!audioUnlocked) return;
 
-    const randomIndex = Math.floor(Math.random() * flipSounds.length);
-    const sound = flipSounds[randomIndex];
-
-    sound.currentTime = 0;
-    sound.play();
+    flipSound.currentTime = 0;
+    flipSound.play();
 }
 
 /* ===================== */
@@ -244,7 +232,7 @@ function isIOS() {
 
 overlay.addEventListener("click", () => {
 
-    unlockAudio(); // penting untuk Safari
+    unlockAudio(); // unlock Safari audio
 
     overlay.style.display = "none";
     exitBtn.style.display = "block";
