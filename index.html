@@ -15,7 +15,8 @@ html,body{
     background:#000;
 }
 
-/* SPLASH */
+/* ================= SPLASH ================= */
+
 #startOverlay{
     position:fixed;
     inset:0;
@@ -64,7 +65,8 @@ html,body{
     line-height:1.6;
 }
 
-/* FIREFLIES */
+/* ================= FIREFLIES ================= */
+
 #fireflyCanvas{
     position:fixed;
     inset:0;
@@ -72,7 +74,8 @@ html,body{
     pointer-events:none;
 }
 
-/* EXIT */
+/* ================= EXIT BUTTON ================= */
+
 #exitBtn{
     position:fixed;
     top:20px;
@@ -84,7 +87,8 @@ html,body{
     display:none;
 }
 
-/* ALBUM */
+/* ================= ALBUM ================= */
+
 .stage{
     position:fixed;
     inset:0;
@@ -137,7 +141,6 @@ html,body{
 
 <body>
 
-<audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
 <canvas id="fireflyCanvas"></canvas>
 
 <div id="startOverlay">
@@ -160,21 +163,32 @@ html,body{
 </div>
 
 <script src="page-flip.browser.js"></script>
+
 <script>
-/* AUDIO */
-const flipAudio=document.getElementById("flipAudio");
-flipAudio.volume=0.25;
-let audioReady=false;
+/* ================= AUDIO (NO DELAY VERSION) ================= */
+
+const baseAudio = new Audio("sounds/flip3.mp3");
+baseAudio.volume = 0.25;
+
+let audioUnlocked = false;
 
 function unlockAudio(){
-    flipAudio.play().then(()=>{
-        flipAudio.pause();
-        flipAudio.currentTime=0;
-        audioReady=true;
+    baseAudio.play().then(()=>{
+        baseAudio.pause();
+        audioUnlocked = true;
     }).catch(()=>{});
 }
 
-/* FIREFLIES */
+function playFlipSound(){
+    if(!audioUnlocked) return;
+
+    const sound = baseAudio.cloneNode();
+    sound.volume = 0.25;
+    sound.play();
+}
+
+/* ================= FIREFLIES ================= */
+
 const canvas=document.getElementById("fireflyCanvas");
 const ctx=canvas.getContext("2d");
 let w,h,speed=1;
@@ -220,7 +234,8 @@ function animate(){
 }
 animate();
 
-/* SPLASH */
+/* ================= SPLASH ================= */
+
 const overlay=document.getElementById("startOverlay");
 const exitBtn=document.getElementById("exitBtn");
 
@@ -237,7 +252,8 @@ overlay.addEventListener("click",()=>{
 
 exitBtn.addEventListener("click",()=>location.reload());
 
-/* ALBUM */
+/* ================= ALBUM ================= */
+
 const flipbook=document.getElementById("flipbook");
 const wrapper=document.querySelector(".scale-wrapper");
 
@@ -257,17 +273,13 @@ const pageFlip=new St.PageFlip(flipbook,{
     showCover:true,
     usePortrait:false,
     drawShadow:true,
-    flippingTime:650
+    flippingTime:480
 });
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-/* SOUND DIPANGGIL SAAT FLIP MULAI */
-pageFlip.on("changeState",(e)=>{
-    if(e.data==="flipping" && audioReady){
-        flipAudio.currentTime=0;
-        flipAudio.play();
-    }
+pageFlip.on("flip",()=>{
+    playFlipSound();
 });
 
 function scaleBook(){
