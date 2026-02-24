@@ -38,8 +38,8 @@ html,body{
 }
 
 .phone-rotate{
-    width:50px;
-    height:85px;
+    width:35px;
+    height:65px;
     border:2px solid white;
     border-radius:14px;
     margin-bottom:25px;
@@ -60,7 +60,7 @@ html,body{
 
 .subtitle{
     font-family:'Playfair Display',serif;
-    font-size:16px;
+    font-size:13px;
     opacity:.85;
     line-height:1.6;
 }
@@ -141,6 +141,8 @@ html,body{
 
 <body>
 
+<audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
+
 <canvas id="fireflyCanvas"></canvas>
 
 <div id="startOverlay">
@@ -165,26 +167,24 @@ html,body{
 <script src="page-flip.browser.js"></script>
 
 <script>
-/* ================= AUDIO (NO DELAY VERSION) ================= */
+/* ================= AUDIO ================= */
 
-const baseAudio = new Audio("sounds/flip3.mp3");
-baseAudio.volume = 0.25;
-
+const flipAudio = document.getElementById("flipAudio");
+flipAudio.volume = 0.25;
 let audioUnlocked = false;
 
 function unlockAudio(){
-    baseAudio.play().then(()=>{
-        baseAudio.pause();
+    flipAudio.play().then(()=>{
+        flipAudio.pause();
+        flipAudio.currentTime = 0;
         audioUnlocked = true;
     }).catch(()=>{});
 }
 
 function playFlipSound(){
     if(!audioUnlocked) return;
-
-    const sound = baseAudio.cloneNode();
-    sound.volume = 0.25;
-    sound.play();
+    flipAudio.currentTime = 0;
+    flipAudio.play();
 }
 
 /* ================= FIREFLIES ================= */
@@ -293,4 +293,3 @@ scaleBook();
 
 </body>
 </html>
-
