@@ -37,20 +37,91 @@ html,body{
     pointer-events:none;
 }
 
+.anim-wrapper{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:120px;
+    margin-bottom:40px;
+}
+
+/* PHONE */
+
 .phone-rotate{
+    position:absolute;
     width:35px;
     height:65px;
     border:2px solid white;
-    border-radius:14px;
-    margin-bottom:25px;
-    animation:rotatePhone 8s infinite ease-in-out;
+    border-radius:7px;
+    animation:phoneLoop 7s cubic-bezier(.77,0,.18,1) infinite;
 }
 
-@keyframes rotatePhone{
-    0%{transform:rotate(0deg);}
-    50%{transform:rotate(90deg);}
-    100%{transform:rotate(0deg);}
+@keyframes phoneLoop{
+    0%   {transform:translateX(0) rotate(0deg);}
+    15%  {transform:translateX(0) rotate(90deg);}
+    30%  {transform:translateX(-60px) rotate(90deg);}
+    70%  {transform:translateX(-60px) rotate(90deg);}
+    85%  {transform:translateX(0) rotate(90deg);}
+    100% {transform:translateX(0) rotate(0deg);}
 }
+
+/* DIVIDER */
+
+.divider{
+    position:absolute;
+    width:2px;
+    background:white;
+    height:0;
+    left:50%;
+    transform:translateX(-1px);
+    animation:lineLoop 7s cubic-bezier(.77,0,.18,1) infinite;
+}
+
+@keyframes lineLoop{
+    0%   {height:0;}
+    28%  {height:0;}
+    38%  {height:60px;}
+    68%  {height:60px;}
+    78%  {height:0;}
+    100% {height:0;}
+}
+
+/* TEXT */
+
+.reveal-text{
+    position:absolute;
+    left:50%;
+    transform:translateX(20px);
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    font-family:'Abril Fatface',serif;
+    font-size:16px;
+    line-height:1.1;
+    overflow:hidden;
+}
+
+.reveal-text span{
+    transform:translateX(-120%);
+    opacity:0;
+    animation:textLoop 7s cubic-bezier(.77,0,.18,1) infinite;
+}
+
+.reveal-text span:nth-child(1){ animation-delay:.1s; }
+.reveal-text span:nth-child(2){ animation-delay:.2s; }
+.reveal-text span:nth-child(3){ animation-delay:.3s; }
+
+@keyframes textLoop{
+    0%   {transform:translateX(-120%);opacity:0;}
+    38%  {transform:translateX(-120%);opacity:0;}
+    48%  {transform:translateX(0);opacity:1;}
+    68%  {transform:translateX(0);opacity:1;}
+    78%  {transform:translateX(-120%);opacity:0;}
+    100% {transform:translateX(-120%);opacity:0;}
+}
+
+/* TITLE (ASLI) */
 
 .title{
     font-family:'Abril Fatface',serif;
@@ -87,7 +158,7 @@ html,body{
     display:none;
 }
 
-/* ================= ALBUM ================= */
+/* ================= ALBUM (100% ASLI) ================= */
 
 .stage{
     position:fixed;
@@ -142,16 +213,26 @@ html,body{
 <body>
 
 <audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
-
 <canvas id="fireflyCanvas"></canvas>
 
 <div id="startOverlay">
-    <div class="phone-rotate"></div>
+    <div class="anim-wrapper">
+        <div class="phone-rotate"></div>
+        <div class="divider"></div>
+        <div class="reveal-text">
+            <span>Rotate</span>
+            <span>Your</span>
+            <span>Phone</span>
+        </div>
+    </div>
+
     <div class="title">Album Foto</div>
     <div class="subtitle">
         Juni 2022 - Juli 2025<br>
         Perjalanan Seorang Anak Manusia<br>
-        Gunakan mode landscape<br>
+    </div>
+
+    <div class="subtitle">
         Ketuk di mana saja untuk membuka
     </div>
 </div>
@@ -167,8 +248,6 @@ html,body{
 <script src="page-flip.browser.js"></script>
 
 <script>
-/* ================= AUDIO ================= */
-
 const flipAudio = document.getElementById("flipAudio");
 flipAudio.volume = 0.25;
 let audioUnlocked = false;
@@ -187,8 +266,6 @@ function playFlipSound(){
     flipAudio.play();
 }
 
-/* ================= FIREFLIES ================= */
-
 const canvas=document.getElementById("fireflyCanvas");
 const ctx=canvas.getContext("2d");
 let w,h,speed=1;
@@ -203,29 +280,51 @@ window.addEventListener("resize",resize);
 class Firefly{
     constructor(){this.reset();}
     reset(){
-        this.size=Math.random()*6+6;
+        this.depth=Math.random()*0.8+0.2;
+        this.size=((Math.random()*6+6)*this.depth)*1.5; 
         this.x=Math.random()*w;
         this.y=Math.random()*h;
-        this.vx=(Math.random()-0.5)*0.7;
-        this.vy=(Math.random()-0.5)*0.7;
+        this.angle=Math.random()*Math.PI*2;
+        this.curveStrength=Math.random()*0.02+0.005;
+        this.speedFactor=(Math.random()*0.5+0.3)*this.depth;
+        this.pulse=Math.random()*Math.PI*2;
+        this.trail=[];
     }
     update(){
-        this.x+=this.vx*speed;
-        this.y+=this.vy*speed;
-        if(this.x<0||this.x>w||this.y<0||this.y>h) this.reset();
+        this.pulse+=0.05;
+        this.angle+=this.curveStrength;
+        this.x+=Math.cos(this.angle)*this.speedFactor*speed;
+        this.y+=Math.sin(this.angle)*this.speedFactor*speed;
+
+        this.trail.push({x:this.x,y:this.y});
+        if(this.trail.length>12) this.trail.shift();
+
+        if(this.x<-50||this.x>w+50||this.y<-50||this.y>h+50) this.reset();
     }
     draw(){
+        for(let i=0;i<this.trail.length;i++){
+            const t=this.trail[i];
+            ctx.beginPath();
+            ctx.arc(t.x,t.y,this.size*(i/this.trail.length),0,Math.PI*2);
+            ctx.fillStyle="rgba(255,215,90,"+(i/this.trail.length*0.2)+")";
+            ctx.fill();
+        }
+
+        const edgeDist=Math.min(this.x,w-this.x,this.y,h-this.y);
+        const edgeFade=Math.max(edgeDist/200,0);
+        const glow=(Math.sin(this.pulse)+1)/2;
+
         ctx.beginPath();
         ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-        ctx.fillStyle="rgba(255,215,90,.95)";
-        ctx.shadowColor="rgba(255,215,90,.8)";
-        ctx.shadowBlur=25;
+        ctx.fillStyle="rgba(255,215,90,"+(0.4+glow*0.6)*edgeFade+")";
+        ctx.shadowColor="rgba(255,215,90,"+(0.6+glow*0.4)*edgeFade+")";
+        ctx.shadowBlur=20+glow*25;
         ctx.fill();
     }
 }
 
 const flies=[];
-for(let i=0;i<5;i++) flies.push(new Firefly());
+for(let i=0;i<8;i++) flies.push(new Firefly());
 
 function animate(){
     ctx.clearRect(0,0,w,h);
@@ -233,8 +332,6 @@ function animate(){
     requestAnimationFrame(animate);
 }
 animate();
-
-/* ================= SPLASH ================= */
 
 const overlay=document.getElementById("startOverlay");
 const exitBtn=document.getElementById("exitBtn");
@@ -251,8 +348,6 @@ overlay.addEventListener("click",()=>{
 });
 
 exitBtn.addEventListener("click",()=>location.reload());
-
-/* ================= ALBUM ================= */
 
 const flipbook=document.getElementById("flipbook");
 const wrapper=document.querySelector(".scale-wrapper");
@@ -293,4 +388,3 @@ scaleBook();
 
 </body>
 </html>
-
