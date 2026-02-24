@@ -5,7 +5,6 @@
 <title>Album Keluarga</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap" rel="stylesheet">
 
 <style>
@@ -23,19 +22,19 @@ html,body{
     position:fixed;
     inset:0;
     background:#000;
-    color:white;
     display:flex;
     flex-direction:column;
     justify-content:center;
     align-items:center;
     text-align:center;
-    z-index:999;
+    color:white;
+    z-index:100;
     transition:opacity 0.6s ease, transform 0.6s ease;
 }
 
 #startOverlay.exit{
     opacity:0;
-    transform:scale(1.1);
+    transform:scale(1.05);
     pointer-events:none;
 }
 
@@ -45,7 +44,6 @@ html,body{
     border:3px solid white;
     border-radius:15px;
     margin-bottom:30px;
-    position:relative;
     animation:rotatePhone 3s infinite ease-in-out;
 }
 
@@ -66,24 +64,13 @@ html,body{
     opacity:0.85;
 }
 
-/* Text exit animation */
-.text-exit{
-    animation:textFly 0.6s ease forwards;
-}
-
-@keyframes textFly{
-    to{
-        transform:translateY(-200px) scale(1.2);
-        opacity:0;
-    }
-}
-
 /* ================= FIREFLIES ================= */
 
-canvas{
+#fireflyCanvas{
     position:fixed;
     inset:0;
-    z-index:0;
+    z-index:101; /* di atas overlay background */
+    pointer-events:none;
 }
 
 /* ================= ALBUM ================= */
@@ -95,6 +82,7 @@ canvas{
     justify-content:center;
     align-items:center;
     background: radial-gradient(circle at center, #2e2e2e 0%, #111 100%);
+    z-index:1;
 }
 
 .scale-wrapper{
@@ -120,7 +108,8 @@ canvas{
 
 <body>
 
-<canvas id="fireflies"></canvas>
+<!-- Canvas SEKARANG di atas background -->
+<canvas id="fireflyCanvas"></canvas>
 
 <div id="startOverlay">
     <div class="phone-rotate"></div>
@@ -141,12 +130,12 @@ canvas{
 <script src="page-flip.browser.js"></script>
 
 <script>
-/* ================= FIREFLY SYSTEM ================= */
+/* ================= FIREFLIES ================= */
 
-const canvas = document.getElementById("fireflies");
+const canvas = document.getElementById("fireflyCanvas");
 const ctx = canvas.getContext("2d");
 
-let w, h;
+let w,h;
 let speedMultiplier = 1;
 
 function resize(){
@@ -154,30 +143,27 @@ function resize(){
     h = canvas.height = window.innerHeight;
 }
 resize();
-window.addEventListener("resize", resize);
+window.addEventListener("resize",resize);
 
 class Firefly{
-    constructor(){
-        this.reset();
-    }
+    constructor(){ this.reset(); }
     reset(){
-        this.x = Math.random()*w;
-        this.y = Math.random()*h;
-        this.radius = Math.random()*2+1;
-        this.speedX = (Math.random()-0.5)*0.5;
-        this.speedY = (Math.random()-0.5)*0.5;
+        this.x=Math.random()*w;
+        this.y=Math.random()*h;
+        this.r=Math.random()*2+1;
+        this.vx=(Math.random()-0.5)*0.6;
+        this.vy=(Math.random()-0.5)*0.6;
     }
     update(){
-        this.x += this.speedX*speedMultiplier;
-        this.y += this.speedY*speedMultiplier;
-
+        this.x+=this.vx*speedMultiplier;
+        this.y+=this.vy*speedMultiplier;
         if(this.x<0||this.x>w||this.y<0||this.y>h){
             this.reset();
         }
     }
     draw(){
         ctx.beginPath();
-        ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+        ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
         ctx.fillStyle="rgba(255,220,100,0.9)";
         ctx.shadowColor="rgba(255,220,100,0.8)";
         ctx.shadowBlur=15;
@@ -200,38 +186,36 @@ function animate(){
 }
 animate();
 
-/* ================= SPLASH BEHAVIOR ================= */
+/* ================= SPLASH CLICK ================= */
 
-const overlay = document.getElementById("startOverlay");
+const overlay=document.getElementById("startOverlay");
 
 overlay.addEventListener("click",()=>{
-    speedMultiplier = 6; // kunang-kunang makin cepat
+    speedMultiplier=6; // terbang cepat
 
-    overlay.classList.add("text-exit");
     overlay.classList.add("exit");
 
     setTimeout(()=>{
         overlay.style.display="none";
+        canvas.style.display="none"; // hilangkan kunang-kunang setelah splash
     },600);
 });
 
 /* ================= ALBUM ================= */
 
-const flipbook = document.getElementById("flipbook");
-const wrapper = document.querySelector(".scale-wrapper");
+const flipbook=document.getElementById("flipbook");
+const wrapper=document.querySelector(".scale-wrapper");
 
 for(let i=1;i<=80;i++){
-    const page = document.createElement("div");
+    const page=document.createElement("div");
     page.classList.add("page");
-
-    const img = document.createElement("img");
+    const img=document.createElement("img");
     img.src="images/"+i+".jpg";
-
     page.appendChild(img);
     flipbook.appendChild(page);
 }
 
-const pageFlip = new St.PageFlip(flipbook,{
+const pageFlip=new St.PageFlip(flipbook,{
     width:654,
     height:600,
     size:"fixed",
@@ -242,8 +226,8 @@ const pageFlip = new St.PageFlip(flipbook,{
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
 function scaleBook(){
-    const scaleX = window.innerWidth/1308;
-    const scaleY = window.innerHeight/600;
+    const scaleX=window.innerWidth/1308;
+    const scaleY=window.innerHeight/600;
     wrapper.style.transform=`scale(${Math.min(scaleX,scaleY)*0.95})`;
 }
 window.addEventListener("resize",scaleBook);
