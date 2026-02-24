@@ -116,56 +116,42 @@ html,body{
     box-shadow:0 15px 40px rgba(0,0,0,0.25);
 }
 
-/* ===== CREASE LEFT ===== */
+/* CREASE */
 .page.page-left:not(.page-cover)::after{
     content:"";
     position:absolute;
-    top:0;
-    bottom:0;
-    right:0;
+    top:0; bottom:0; right:0;
     width:60px;
-    pointer-events:none;
-    background:
-        linear-gradient(
-            to left,
-            rgba(0,0,0,0.25) 0%,
-            rgba(0,0,0,0.12) 25%,
-            rgba(0,0,0,0.05) 45%,
-            rgba(255,255,255,0.18) 70%,
-            rgba(255,255,255,0.0) 100%
-        );
+    background:linear-gradient(to left,
+        rgba(0,0,0,0.25) 0%,
+        rgba(0,0,0,0.1) 30%,
+        rgba(255,255,255,0.15) 70%,
+        rgba(255,255,255,0) 100%);
 }
 
-/* ===== CREASE RIGHT ===== */
 .page.page-right:not(.page-cover)::after{
     content:"";
     position:absolute;
-    top:0;
-    bottom:0;
-    left:0;
+    top:0; bottom:0; left:0;
     width:60px;
-    pointer-events:none;
-    background:
-        linear-gradient(
-            to right,
-            rgba(0,0,0,0.25) 0%,
-            rgba(0,0,0,0.12) 25%,
-            rgba(0,0,0,0.05) 45%,
-            rgba(255,255,255,0.18) 70%,
-            rgba(255,255,255,0.0) 100%
-        );
+    background:linear-gradient(to right,
+        rgba(0,0,0,0.25) 0%,
+        rgba(0,0,0,0.1) 30%,
+        rgba(255,255,255,0.15) 70%,
+        rgba(255,255,255,0) 100%);
 }
 
 .page img{
     width:100%;
     height:100%;
     object-fit:contain;
-    background:white;
 }
 </style>
 </head>
 
 <body>
+
+<audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
 
 <canvas id="fireflyCanvas"></canvas>
 
@@ -191,10 +177,22 @@ html,body{
 <script src="page-flip.browser.js"></script>
 
 <script>
-/* ================= SPLASH + FIREFLIES tetap sama ================= */
+/* ================= AUDIO ================= */
 
-const overlay=document.getElementById("startOverlay");
-const exitBtn=document.getElementById("exitBtn");
+const flipAudio = document.getElementById("flipAudio");
+flipAudio.volume = 0.25;
+let audioReady = false;
+
+function unlockAudio(){
+    flipAudio.play().then(()=>{
+        flipAudio.pause();
+        flipAudio.currentTime = 0;
+        audioReady = true;
+    }).catch(()=>{});
+}
+
+/* ================= FIREFLIES ================= */
+
 const canvas=document.getElementById("fireflyCanvas");
 const ctx=canvas.getContext("2d");
 
@@ -219,9 +217,7 @@ class Firefly{
     update(){
         this.x+=this.vx*speedMultiplier;
         this.y+=this.vy*speedMultiplier;
-        if(this.x<0||this.x>w||this.y<0||this.y>h){
-            this.reset();
-        }
+        if(this.x<0||this.x>w||this.y<0||this.y>h){this.reset();}
     }
     draw(){
         ctx.beginPath();
@@ -243,9 +239,16 @@ function animate(){
 }
 animate();
 
+/* ================= SPLASH ================= */
+
+const overlay=document.getElementById("startOverlay");
+const exitBtn=document.getElementById("exitBtn");
+
 overlay.addEventListener("click",()=>{
+    unlockAudio();
     speedMultiplier=4;
     overlay.classList.add("exit");
+
     setTimeout(()=>{
         overlay.style.display="none";
         canvas.style.display="none";
@@ -275,11 +278,26 @@ const pageFlip=new St.PageFlip(flipbook,{
     size:"fixed",
     showCover:true,
     usePortrait:false,
-    drawShadow:true,
-    maxShadowOpacity:0.45
+    drawShadow:true
 });
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
+
+flipbook.addEventListener("click",(e)=>{
+    const rect=flipbook.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+
+    if(audioReady){
+        flipAudio.currentTime=0;
+        flipAudio.play();
+    }
+
+    if(x>rect.width/2){
+        pageFlip.flipNext();
+    }else{
+        pageFlip.flipPrev();
+    }
+});
 
 function scaleBook(){
     const scaleX=window.innerWidth/1308;
