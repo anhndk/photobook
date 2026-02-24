@@ -135,21 +135,22 @@ const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
 
 /* ===================== */
-/* SINGLE SOUND - SAFARI PROOF */
+/* SOUND - NO DELAY + SAFARI FIX */
 /* ===================== */
 
 const flipSound = new Audio("sounds/flip3.mp3");
 flipSound.volume = 0.25;
 flipSound.preload = "auto";
+flipSound.load();
 
 let audioUnlocked = false;
 
 function unlockAudio() {
     if (audioUnlocked) return;
 
-    const playPromise = flipSound.play();
-    if (playPromise !== undefined) {
-        playPromise.then(() => {
+    const p = flipSound.play();
+    if (p !== undefined) {
+        p.then(() => {
             flipSound.pause();
             flipSound.currentTime = 0;
         }).catch(() => {});
@@ -194,8 +195,11 @@ const pageFlip = new St.PageFlip(flipbook, {
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-pageFlip.on("flip", () => {
-    playFlipSound();
+/* SOUND DIPANGGIL SAAT ANIMASI MULAI */
+pageFlip.on("changeState", (e) => {
+    if (e.data === "flipping") {
+        playFlipSound();
+    }
 });
 
 /* Tap kiri/kanan */
@@ -232,7 +236,7 @@ function isIOS() {
 
 overlay.addEventListener("click", () => {
 
-    unlockAudio(); // unlock Safari audio
+    unlockAudio();
 
     overlay.style.display = "none";
     exitBtn.style.display = "block";
@@ -253,4 +257,3 @@ exitBtn.addEventListener("click", () => {
 
 </body>
 </html>
-
