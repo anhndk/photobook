@@ -70,44 +70,6 @@ body{
     box-shadow:0 15px 40px rgba(0,0,0,0.25);
 }
 
-.page.page-left:not(.page-cover)::after{
-    content:"";
-    position:absolute;
-    top:0;
-    bottom:0;
-    right:0;
-    width:60px;
-    pointer-events:none;
-    background:
-        linear-gradient(
-            to left,
-            rgba(0,0,0,0.25) 0%,
-            rgba(0,0,0,0.12) 25%,
-            rgba(0,0,0,0.05) 45%,
-            rgba(255,255,255,0.18) 70%,
-            rgba(255,255,255,0.0) 100%
-        );
-}
-
-.page.page-right:not(.page-cover)::after{
-    content:"";
-    position:absolute;
-    top:0;
-    bottom:0;
-    left:0;
-    width:60px;
-    pointer-events:none;
-    background:
-        linear-gradient(
-            to right,
-            rgba(0,0,0,0.25) 0%,
-            rgba(0,0,0,0.12) 25%,
-            rgba(0,0,0,0.05) 45%,
-            rgba(255,255,255,0.18) 70%,
-            rgba(255,255,255,0.0) 100%
-        );
-}
-    
 .page img{
     width:100%;
     height:100%;
@@ -135,35 +97,33 @@ const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
 
 /* ===================== */
-/* SOUND - NO DELAY + SAFARI FIX */
+/* ULTRA FAST AUDIO (Web Audio API) */
 /* ===================== */
 
-const flipSound = new Audio("sounds/flip3.mp3");
-flipSound.volume = 0.25;
-flipSound.preload = "auto";
-flipSound.load();
+let audioContext;
+let flipBuffer = null;
 
-let audioUnlocked = false;
+async function initAudio() {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-function unlockAudio() {
-    if (audioUnlocked) return;
-
-    const p = flipSound.play();
-    if (p !== undefined) {
-        p.then(() => {
-            flipSound.pause();
-            flipSound.currentTime = 0;
-        }).catch(() => {});
-    }
-
-    audioUnlocked = true;
+    const response = await fetch("sounds/flip3.mp3");
+    const arrayBuffer = await response.arrayBuffer();
+    flipBuffer = await audioContext.decodeAudioData(arrayBuffer);
 }
 
-function playFlipSound(){
-    if (!audioUnlocked) return;
+function playFlipSound() {
+    if (!flipBuffer || !audioContext) return;
 
-    flipSound.currentTime = 0;
-    flipSound.play();
+    const source = audioContext.createBufferSource();
+    source.buffer = flipBuffer;
+
+    const gainNode = audioContext.createGain();
+    gainNode.gain.value = 0.25;
+
+    source.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    source.start(0);
 }
 
 /* ===================== */
@@ -195,7 +155,6 @@ const pageFlip = new St.PageFlip(flipbook, {
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-/* SOUND DIPANGGIL SAAT ANIMASI MULAI */
 pageFlip.on("changeState", (e) => {
     if (e.data === "flipping") {
         playFlipSound();
@@ -214,6 +173,7 @@ flipbook.addEventListener("click", (e) => {
     }
 });
 
+/* Responsive scaling */
 function scaleBook(){
     const scaleX = window.innerWidth / 1308;
     const scaleY = window.innerHeight / 600;
@@ -223,10 +183,7 @@ function scaleBook(){
 window.addEventListener("resize", scaleBook);
 scaleBook();
 
-/* ===================== */
-/* FULLSCREEN + AUDIO UNLOCK */
-/* ===================== */
-
+/* Fullscreen + Init Audio */
 const overlay = document.getElementById("startOverlay");
 const exitBtn = document.getElementById("exitBtn");
 
@@ -234,12 +191,18 @@ function isIOS() {
     return /iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-overlay.addEventListener("click", () => {
-
-    unlockAudio();
+overlay.addEventListener("click", async () => {
 
     overlay.style.display = "none";
     exitBtn.style.display = "block";
+
+    if (!audioContext) {
+        await initAudio();
+    }
+
+    if (audioContext.state === "suspended") {
+        await audioContext.resume();
+    }
 
     if (!isIOS()) {
         document.documentElement.requestFullscreen();
