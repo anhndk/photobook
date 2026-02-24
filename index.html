@@ -20,7 +20,6 @@ body{
     align-items:center;
 }
 
-/* Splash */
 #startOverlay{
     position:fixed;
     inset:0;
@@ -35,7 +34,6 @@ body{
     z-index:999;
 }
 
-/* Tombol X */
 #exitBtn{
     position:fixed;
     top:20px;
@@ -48,7 +46,6 @@ body{
     user-select:none;
 }
 
-/* Stage */
 .stage{
     width:100vw;
     height:100vh;
@@ -58,32 +55,21 @@ body{
     overflow:hidden;
 }
 
-/* Scaling wrapper */
 .scale-wrapper{
     transform-origin:center center;
 }
 
-/* Buku ukuran asli */
 #flipbook{
     width:1308px;
     height:600px;
 }
 
-/* Halaman */
 .page{
     position:relative;
     background:white;
     box-shadow:0 15px 40px rgba(0,0,0,0.25);
 }
 
-/* Crease lebih agresif */
-.page{
-    position:relative;
-    background:white;
-    box-shadow:0 15px 40px rgba(0,0,0,0.25);
-}
-
-/* Halaman kiri (bukan cover) */
 .page.page-left:not(.page-cover)::after{
     content:"";
     position:absolute;
@@ -103,7 +89,6 @@ body{
         );
 }
 
-/* Halaman kanan (bukan cover) */
 .page.page-right:not(.page-cover)::after{
     content:"";
     position:absolute;
@@ -149,7 +134,31 @@ body{
 const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
 
+/* ===================== */
+/* SOUND SETUP */
+/* ===================== */
+
+const flipSounds = [
+    new Audio("sounds/flip1.mp3"),
+    new Audio("sounds/flip2.mp3"),
+    new Audio("sounds/flip3.mp3")
+];
+
+flipSounds.forEach(sound => {
+    sound.volume = 0.25; // subtle
+});
+
+function playFlipSound(){
+    const randomIndex = Math.floor(Math.random() * flipSounds.length);
+    const sound = flipSounds[randomIndex];
+    sound.currentTime = 0;
+    sound.play();
+}
+
+/* ===================== */
 /* Generate halaman */
+/* ===================== */
+
 for(let i=1;i<=80;i++){
     const page = document.createElement("div");
     page.classList.add("page");
@@ -161,7 +170,6 @@ for(let i=1;i<=80;i++){
     flipbook.appendChild(page);
 }
 
-/* Init PageFlip – animasi lebih cepat & elegan */
 const pageFlip = new St.PageFlip(flipbook, {
     width:654,
     height:600,
@@ -176,7 +184,12 @@ const pageFlip = new St.PageFlip(flipbook, {
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-/* Tap kiri/kanan untuk flip (HP & desktop) */
+/* Play sound saat flip selesai */
+pageFlip.on("flip", () => {
+    playFlipSound();
+});
+
+/* Tap kiri/kanan */
 flipbook.addEventListener("click", (e) => {
     const rect = flipbook.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -188,7 +201,6 @@ flipbook.addEventListener("click", (e) => {
     }
 });
 
-/* Responsive scaling tanpa jumping */
 function scaleBook(){
     const scaleX = window.innerWidth / 1308;
     const scaleY = window.innerHeight / 600;
@@ -198,7 +210,7 @@ function scaleBook(){
 window.addEventListener("resize", scaleBook);
 scaleBook();
 
-/* Fullscreen Safari-safe */
+/* Fullscreen */
 const overlay = document.getElementById("startOverlay");
 const exitBtn = document.getElementById("exitBtn");
 
@@ -225,8 +237,3 @@ exitBtn.addEventListener("click", () => {
 
 </body>
 </html>
-
-
-
-
-
