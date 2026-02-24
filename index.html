@@ -15,8 +15,7 @@ html,body{
     background:#000;
 }
 
-/* ================= SPLASH ================= */
-
+/* SPLASH */
 #startOverlay{
     position:fixed;
     inset:0;
@@ -38,8 +37,8 @@ html,body{
 }
 
 .phone-rotate{
-    width:35px;
-    height:65px;
+    width:50px;
+    height:85px;
     border:2px solid white;
     border-radius:14px;
     margin-bottom:25px;
@@ -65,17 +64,7 @@ html,body{
     line-height:1.6;
 }
 
-/* ================= FIREFLIES ================= */
-
-#fireflyCanvas{
-    position:fixed;
-    inset:0;
-    z-index:101;
-    pointer-events:none;
-}
-
-/* ================= EXIT BUTTON ================= */
-
+/* EXIT BUTTON */
 #exitBtn{
     position:fixed;
     top:20px;
@@ -87,8 +76,7 @@ html,body{
     display:none;
 }
 
-/* ================= ALBUM ================= */
-
+/* ALBUM */
 .stage{
     position:fixed;
     inset:0;
@@ -143,8 +131,6 @@ html,body{
 
 <audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
 
-<canvas id="fireflyCanvas"></canvas>
-
 <div id="startOverlay">
     <div class="phone-rotate"></div>
     <div class="title">Album Foto</div>
@@ -167,10 +153,10 @@ html,body{
 <script src="page-flip.browser.js"></script>
 
 <script>
-/* ================= AUDIO ================= */
-
+/* AUDIO */
 const flipAudio = document.getElementById("flipAudio");
 flipAudio.volume = 0.25;
+
 let audioUnlocked = false;
 
 function unlockAudio(){
@@ -181,79 +167,31 @@ function unlockAudio(){
     }).catch(()=>{});
 }
 
-function playFlipSound(){
+/* SOUND DIMAJUKAN */
+function playFlipSoundEarly(){
     if(!audioUnlocked) return;
+
+    // Buffer warm
     flipAudio.currentTime = 0;
     flipAudio.play();
 }
 
-/* ================= FIREFLIES ================= */
-
-const canvas=document.getElementById("fireflyCanvas");
-const ctx=canvas.getContext("2d");
-let w,h,speed=1;
-
-function resize(){
-    w=canvas.width=window.innerWidth;
-    h=canvas.height=window.innerHeight;
-}
-resize();
-window.addEventListener("resize",resize);
-
-class Firefly{
-    constructor(){this.reset();}
-    reset(){
-        this.size=Math.random()*6+6;
-        this.x=Math.random()*w;
-        this.y=Math.random()*h;
-        this.vx=(Math.random()-0.5)*0.7;
-        this.vy=(Math.random()-0.5)*0.7;
-    }
-    update(){
-        this.x+=this.vx*speed;
-        this.y+=this.vy*speed;
-        if(this.x<0||this.x>w||this.y<0||this.y>h) this.reset();
-    }
-    draw(){
-        ctx.beginPath();
-        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-        ctx.fillStyle="rgba(255,215,90,.95)";
-        ctx.shadowColor="rgba(255,215,90,.8)";
-        ctx.shadowBlur=25;
-        ctx.fill();
-    }
-}
-
-const flies=[];
-for(let i=0;i<5;i++) flies.push(new Firefly());
-
-function animate(){
-    ctx.clearRect(0,0,w,h);
-    flies.forEach(f=>{f.update();f.draw();});
-    requestAnimationFrame(animate);
-}
-animate();
-
-/* ================= SPLASH ================= */
-
+/* SPLASH */
 const overlay=document.getElementById("startOverlay");
 const exitBtn=document.getElementById("exitBtn");
 
 overlay.addEventListener("click",()=>{
     unlockAudio();
-    speed=4;
     overlay.classList.add("exit");
     setTimeout(()=>{
         overlay.style.display="none";
-        canvas.style.display="none";
         exitBtn.style.display="block";
     },600);
 });
 
 exitBtn.addEventListener("click",()=>location.reload());
 
-/* ================= ALBUM ================= */
-
+/* ALBUM */
 const flipbook=document.getElementById("flipbook");
 const wrapper=document.querySelector(".scale-wrapper");
 
@@ -278,8 +216,13 @@ const pageFlip=new St.PageFlip(flipbook,{
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-pageFlip.on("flip",()=>{
-    playFlipSound();
+/* TRIGGER LEBIH AWAL */
+pageFlip.on("changeState",(e)=>{
+    if(e.data==="flipping"){
+        // mainkan 100ms lebih awal
+        setTimeout(playFlipSoundEarly, -100);
+        playFlipSoundEarly();
+    }
 });
 
 function scaleBook(){
