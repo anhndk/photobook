@@ -15,8 +15,7 @@ html,body{
     background:#000;
 }
 
-/* ================= SPLASH ================= */
-
+/* SPLASH */
 #startOverlay{
     position:fixed;
     inset:0;
@@ -28,7 +27,7 @@ html,body{
     text-align:center;
     color:white;
     z-index:100;
-    transition:opacity 0.6s ease, transform 0.6s ease;
+    transition:opacity .6s ease, transform .6s ease;
 }
 
 #startOverlay.exit{
@@ -47,27 +46,25 @@ html,body{
 }
 
 @keyframes rotatePhone{
-    0%{ transform:rotate(0deg); }
-    50%{ transform:rotate(90deg); }
-    100%{ transform:rotate(0deg); }
+    0%{transform:rotate(0deg);}
+    50%{transform:rotate(90deg);}
+    100%{transform:rotate(0deg);}
 }
 
 .title{
-    font-family:'Abril Fatface', serif;
+    font-family:'Abril Fatface',serif;
     font-size:28px;
     margin-bottom:16px;
 }
 
 .subtitle{
-    font-family:'Playfair Display', serif;
-    font-weight:400;
+    font-family:'Playfair Display',serif;
     font-size:13px;
+    opacity:.85;
     line-height:1.6;
-    opacity:0.85;
 }
 
-/* ================= FIREFLIES ================= */
-
+/* FIREFLIES */
 #fireflyCanvas{
     position:fixed;
     inset:0;
@@ -75,8 +72,7 @@ html,body{
     pointer-events:none;
 }
 
-/* ================= EXIT BUTTON ================= */
-
+/* EXIT */
 #exitBtn{
     position:fixed;
     top:20px;
@@ -88,56 +84,46 @@ html,body{
     display:none;
 }
 
-/* ================= ALBUM ================= */
-
+/* ALBUM */
 .stage{
     position:fixed;
     inset:0;
-    width:100vw;
     height:100dvh;
     display:flex;
     justify-content:center;
     align-items:center;
-    background: radial-gradient(circle at center, #2e2e2e 0%, #111 100%);
+    background: radial-gradient(circle at center,#2e2e2e 0%,#111 100%);
 }
 
-.scale-wrapper{
-    transform-origin:center center;
-}
+.scale-wrapper{ transform-origin:center; }
 
-#flipbook{
-    width:1308px;
-    height:600px;
-}
+#flipbook{ width:1308px; height:600px; }
 
 .page{
     position:relative;
     background:white;
-    box-shadow:0 15px 40px rgba(0,0,0,0.25);
+    box-shadow:0 15px 40px rgba(0,0,0,.25);
 }
 
-/* CREASE */
 .page.page-left:not(.page-cover)::after{
     content:"";
     position:absolute;
-    top:0; bottom:0; right:0;
-    width:60px;
+    top:0;bottom:0;right:0;width:60px;
     background:linear-gradient(to left,
-        rgba(0,0,0,0.25) 0%,
-        rgba(0,0,0,0.1) 30%,
-        rgba(255,255,255,0.15) 70%,
+        rgba(0,0,0,.25) 0%,
+        rgba(0,0,0,.1) 30%,
+        rgba(255,255,255,.15) 70%,
         rgba(255,255,255,0) 100%);
 }
 
 .page.page-right:not(.page-cover)::after{
     content:"";
     position:absolute;
-    top:0; bottom:0; left:0;
-    width:60px;
+    top:0;bottom:0;left:0;width:60px;
     background:linear-gradient(to right,
-        rgba(0,0,0,0.25) 0%,
-        rgba(0,0,0,0.1) 30%,
-        rgba(255,255,255,0.15) 70%,
+        rgba(0,0,0,.25) 0%,
+        rgba(0,0,0,.1) 30%,
+        rgba(255,255,255,.15) 70%,
         rgba(255,255,255,0) 100%);
 }
 
@@ -152,7 +138,6 @@ html,body{
 <body>
 
 <audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
-
 <canvas id="fireflyCanvas"></canvas>
 
 <div id="startOverlay">
@@ -175,28 +160,24 @@ html,body{
 </div>
 
 <script src="page-flip.browser.js"></script>
-
 <script>
-/* ================= AUDIO ================= */
-
-const flipAudio = document.getElementById("flipAudio");
-flipAudio.volume = 0.25;
-let audioReady = false;
+/* AUDIO */
+const flipAudio=document.getElementById("flipAudio");
+flipAudio.volume=0.25;
+let audioReady=false;
 
 function unlockAudio(){
     flipAudio.play().then(()=>{
         flipAudio.pause();
-        flipAudio.currentTime = 0;
-        audioReady = true;
+        flipAudio.currentTime=0;
+        audioReady=true;
     }).catch(()=>{});
 }
 
-/* ================= FIREFLIES ================= */
-
+/* FIREFLIES */
 const canvas=document.getElementById("fireflyCanvas");
 const ctx=canvas.getContext("2d");
-
-let w,h,speedMultiplier=1;
+let w,h,speed=1;
 
 function resize(){
     w=canvas.width=window.innerWidth;
@@ -215,40 +196,38 @@ class Firefly{
         this.vy=(Math.random()-0.5)*0.7;
     }
     update(){
-        this.x+=this.vx*speedMultiplier;
-        this.y+=this.vy*speedMultiplier;
-        if(this.x<0||this.x>w||this.y<0||this.y>h){this.reset();}
+        this.x+=this.vx*speed;
+        this.y+=this.vy*speed;
+        if(this.x<0||this.x>w||this.y<0||this.y>h) this.reset();
     }
     draw(){
         ctx.beginPath();
         ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-        ctx.fillStyle="rgba(255,215,90,0.95)";
-        ctx.shadowColor="rgba(255,215,90,0.8)";
+        ctx.fillStyle="rgba(255,215,90,.95)";
+        ctx.shadowColor="rgba(255,215,90,.8)";
         ctx.shadowBlur=25;
         ctx.fill();
     }
 }
 
-const fireflies=[];
-for(let i=0;i<5;i++){fireflies.push(new Firefly());}
+const flies=[];
+for(let i=0;i<5;i++) flies.push(new Firefly());
 
 function animate(){
     ctx.clearRect(0,0,w,h);
-    fireflies.forEach(f=>{f.update();f.draw();});
+    flies.forEach(f=>{f.update();f.draw();});
     requestAnimationFrame(animate);
 }
 animate();
 
-/* ================= SPLASH ================= */
-
+/* SPLASH */
 const overlay=document.getElementById("startOverlay");
 const exitBtn=document.getElementById("exitBtn");
 
 overlay.addEventListener("click",()=>{
     unlockAudio();
-    speedMultiplier=4;
+    speed=4;
     overlay.classList.add("exit");
-
     setTimeout(()=>{
         overlay.style.display="none";
         canvas.style.display="none";
@@ -258,8 +237,7 @@ overlay.addEventListener("click",()=>{
 
 exitBtn.addEventListener("click",()=>location.reload());
 
-/* ================= ALBUM ================= */
-
+/* ALBUM */
 const flipbook=document.getElementById("flipbook");
 const wrapper=document.querySelector(".scale-wrapper");
 
@@ -278,24 +256,17 @@ const pageFlip=new St.PageFlip(flipbook,{
     size:"fixed",
     showCover:true,
     usePortrait:false,
-    drawShadow:true
+    drawShadow:true,
+    flippingTime:650
 });
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-flipbook.addEventListener("click",(e)=>{
-    const rect=flipbook.getBoundingClientRect();
-    const x=e.clientX-rect.left;
-
-    if(audioReady){
+/* SOUND DIPANGGIL SAAT FLIP MULAI */
+pageFlip.on("changeState",(e)=>{
+    if(e.data==="flipping" && audioReady){
         flipAudio.currentTime=0;
         flipAudio.play();
-    }
-
-    if(x>rect.width/2){
-        pageFlip.flipNext();
-    }else{
-        pageFlip.flipPrev();
     }
 });
 
