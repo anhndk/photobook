@@ -5,46 +5,88 @@
 <title>Album Keluarga</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap" rel="stylesheet">
+
 <style>
-html, body{
+html,body{
     margin:0;
     height:100%;
     overflow:hidden;
-    font-family:sans-serif;
+    background:#000;
+    font-family:'Abril Fatface', serif;
 }
 
-body{
-    background: radial-gradient(circle at center, #2e2e2e 0%, #111 100%);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
+/* ================= SPLASH ================= */
 
 #startOverlay{
     position:fixed;
     inset:0;
-    background:#111;
+    background:#000;
     color:white;
     display:flex;
+    flex-direction:column;
     justify-content:center;
     align-items:center;
-    font-size:20px;
-    letter-spacing:2px;
-    cursor:pointer;
+    text-align:center;
     z-index:999;
+    transition:opacity 0.6s ease, transform 0.6s ease;
 }
 
-#exitBtn{
-    position:fixed;
-    top:20px;
-    right:30px;
-    font-size:28px;
-    color:white;
-    cursor:pointer;
-    z-index:1000;
-    display:none;
-    user-select:none;
+#startOverlay.exit{
+    opacity:0;
+    transform:scale(1.1);
+    pointer-events:none;
 }
+
+.phone-rotate{
+    width:60px;
+    height:100px;
+    border:3px solid white;
+    border-radius:15px;
+    margin-bottom:30px;
+    position:relative;
+    animation:rotatePhone 3s infinite ease-in-out;
+}
+
+@keyframes rotatePhone{
+    0%{ transform:rotate(0deg); }
+    50%{ transform:rotate(90deg); }
+    100%{ transform:rotate(0deg); }
+}
+
+.title{
+    font-size:42px;
+    margin-bottom:20px;
+}
+
+.subtitle{
+    font-size:18px;
+    line-height:1.6;
+    opacity:0.85;
+}
+
+/* Text exit animation */
+.text-exit{
+    animation:textFly 0.6s ease forwards;
+}
+
+@keyframes textFly{
+    to{
+        transform:translateY(-200px) scale(1.2);
+        opacity:0;
+    }
+}
+
+/* ================= FIREFLIES ================= */
+
+canvas{
+    position:fixed;
+    inset:0;
+    z-index:0;
+}
+
+/* ================= ALBUM ================= */
 
 .stage{
     width:100vw;
@@ -52,7 +94,7 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    overflow:hidden;
+    background: radial-gradient(circle at center, #2e2e2e 0%, #111 100%);
 }
 
 .scale-wrapper{
@@ -65,27 +107,30 @@ body{
 }
 
 .page{
-    position:relative;
     background:white;
-    box-shadow:0 15px 40px rgba(0,0,0,0.25);
 }
 
 .page img{
     width:100%;
     height:100%;
     object-fit:contain;
-    background:white;
 }
 </style>
 </head>
 
 <body>
 
-<div id="startOverlay">BUKA ALBUM</div>
-<div id="exitBtn">✕</div>
+<canvas id="fireflies"></canvas>
 
-<!-- AUDIO ELEMENT LANGSUNG -->
-<audio id="flipAudio" src="sounds/flip3.mp3" preload="auto"></audio>
+<div id="startOverlay">
+    <div class="phone-rotate"></div>
+    <div class="title">Album Foto</div>
+    <div class="subtitle">
+        Juni 2022 - Juli 2025<br>
+        Perjalanan Seorang Anak Manusia<br>
+        Ketuk di mana saja untuk membuka
+    </div>
+</div>
 
 <div class="stage">
     <div class="scale-wrapper">
@@ -96,115 +141,113 @@ body{
 <script src="page-flip.browser.js"></script>
 
 <script>
+/* ================= FIREFLY SYSTEM ================= */
+
+const canvas = document.getElementById("fireflies");
+const ctx = canvas.getContext("2d");
+
+let w, h;
+let speedMultiplier = 1;
+
+function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+class Firefly{
+    constructor(){
+        this.reset();
+    }
+    reset(){
+        this.x = Math.random()*w;
+        this.y = Math.random()*h;
+        this.radius = Math.random()*2+1;
+        this.speedX = (Math.random()-0.5)*0.5;
+        this.speedY = (Math.random()-0.5)*0.5;
+    }
+    update(){
+        this.x += this.speedX*speedMultiplier;
+        this.y += this.speedY*speedMultiplier;
+
+        if(this.x<0||this.x>w||this.y<0||this.y>h){
+            this.reset();
+        }
+    }
+    draw(){
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+        ctx.fillStyle="rgba(255,220,100,0.9)";
+        ctx.shadowColor="rgba(255,220,100,0.8)";
+        ctx.shadowBlur=15;
+        ctx.fill();
+    }
+}
+
+const fireflies=[];
+for(let i=0;i<60;i++){
+    fireflies.push(new Firefly());
+}
+
+function animate(){
+    ctx.clearRect(0,0,w,h);
+    fireflies.forEach(f=>{
+        f.update();
+        f.draw();
+    });
+    requestAnimationFrame(animate);
+}
+animate();
+
+/* ================= SPLASH BEHAVIOR ================= */
+
+const overlay = document.getElementById("startOverlay");
+
+overlay.addEventListener("click",()=>{
+    speedMultiplier = 6; // kunang-kunang makin cepat
+
+    overlay.classList.add("text-exit");
+    overlay.classList.add("exit");
+
+    setTimeout(()=>{
+        overlay.style.display="none";
+    },600);
+});
+
+/* ================= ALBUM ================= */
+
 const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
-const flipAudio = document.getElementById("flipAudio");
 
-flipAudio.volume = 0.25;
-
-let audioUnlocked = false;
-
-/* Unlock audio via real user gesture */
-function unlockAudio() {
-    if (audioUnlocked) return;
-
-    flipAudio.play().then(() => {
-        flipAudio.pause();
-        flipAudio.currentTime = 0;
-        audioUnlocked = true;
-    }).catch(() => {});
-}
-
-/* Play sound */
-function playFlipSound(){
-    if (!audioUnlocked) return;
-
-    flipAudio.currentTime = 0;
-    flipAudio.play();
-}
-
-/* Generate halaman */
 for(let i=1;i<=80;i++){
     const page = document.createElement("div");
     page.classList.add("page");
 
     const img = document.createElement("img");
-    img.src = "images/"+i+".jpg";
+    img.src="images/"+i+".jpg";
 
     page.appendChild(img);
     flipbook.appendChild(page);
 }
 
-const pageFlip = new St.PageFlip(flipbook, {
+const pageFlip = new St.PageFlip(flipbook,{
     width:654,
     height:600,
     size:"fixed",
     showCover:true,
-    usePortrait:false,
-    mobileScrollSupport:false,
-    drawShadow:true,
-    maxShadowOpacity:0.45,
-    flippingTime:650
+    usePortrait:false
 });
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-/* Panggil saat animasi mulai */
-pageFlip.on("changeState", (e) => {
-    if (e.data === "flipping") {
-        playFlipSound();
-    }
-});
-
-/* Tap kiri/kanan */
-flipbook.addEventListener("click", (e) => {
-    const rect = flipbook.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-
-    if (x > rect.width / 2) {
-        pageFlip.flipNext();
-    } else {
-        pageFlip.flipPrev();
-    }
-});
-
-/* Responsive */
 function scaleBook(){
-    const scaleX = window.innerWidth / 1308;
-    const scaleY = window.innerHeight / 600;
-    const scale = Math.min(scaleX, scaleY) * 0.95;
-    wrapper.style.transform = `scale(${scale})`;
+    const scaleX = window.innerWidth/1308;
+    const scaleY = window.innerHeight/600;
+    wrapper.style.transform=`scale(${Math.min(scaleX,scaleY)*0.95})`;
 }
-window.addEventListener("resize", scaleBook);
+window.addEventListener("resize",scaleBook);
 scaleBook();
-
-/* Fullscreen + Unlock */
-const overlay = document.getElementById("startOverlay");
-const exitBtn = document.getElementById("exitBtn");
-
-function isIOS() {
-    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-overlay.addEventListener("click", () => {
-
-    unlockAudio(); // ini penting banget
-
-    overlay.style.display = "none";
-    exitBtn.style.display = "block";
-
-    if (!isIOS()) {
-        document.documentElement.requestFullscreen();
-    }
-});
-
-exitBtn.addEventListener("click", () => {
-    if (!isIOS()) {
-        document.exitFullscreen();
-    }
-    overlay.style.display = "flex";
-    exitBtn.style.display = "none";
-});
 </script>
 
 </body>
