@@ -58,22 +58,56 @@ body{
     overflow:hidden;
 }
 
-/* Wrapper scaling (biar stabil & no jumping) */
+/* Scaling wrapper */
 .scale-wrapper{
     transform-origin:center center;
 }
 
-/* Ukuran asli buku (fixed, no stretch) */
+/* Buku ukuran asli */
 #flipbook{
-    width:1308px;   /* 654 x 2 */
+    width:1308px;
     height:600px;
 }
 
-/* Page */
+/* Halaman */
 .page{
-    background:#f8f6f2;
+    position:relative;
+    background:#f4f1ea;
     border:0px solid #e5e2dc;
-    box-shadow:0 0 20px rgba(0,0,0,0.15);
+    box-shadow:0 0 25px rgba(0,0,0,0.15);
+}
+
+/* Crease tengah subtle */
+.page::before{
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    width:60px;
+    background:linear-gradient(
+        to right,
+        rgba(0,0,0,0.08),
+        rgba(0,0,0,0.03),
+        transparent
+    );
+    pointer-events:none;
+}
+
+/* Matte texture halus */
+.page::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(0,0,0,0.015) 0px,
+            rgba(0,0,0,0.015) 1px,
+            transparent 1px,
+            transparent 3px
+        );
+    pointer-events:none;
 }
 
 .page img{
@@ -114,7 +148,7 @@ for(let i=1;i<=80;i++){
     flipbook.appendChild(page);
 }
 
-/* Init FIXED (biar stabil, no jumping) */
+/* Init PageFlip – animasi lebih cepat & elegan */
 const pageFlip = new St.PageFlip(flipbook, {
     width:654,
     height:600,
@@ -122,12 +156,26 @@ const pageFlip = new St.PageFlip(flipbook, {
     showCover:true,
     usePortrait:false,
     mobileScrollSupport:false,
-    drawShadow:false
+    drawShadow:true,
+    maxShadowOpacity:0.25,
+    flippingTime:450
 });
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-/* Responsive scaling manual */
+/* Tap kiri/kanan untuk flip (HP & desktop) */
+flipbook.addEventListener("click", (e) => {
+    const rect = flipbook.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    if (x > rect.width / 2) {
+        pageFlip.flipNext();
+    } else {
+        pageFlip.flipPrev();
+    }
+});
+
+/* Responsive scaling tanpa jumping */
 function scaleBook(){
     const scaleX = window.innerWidth / 1308;
     const scaleY = window.innerHeight / 600;
@@ -137,7 +185,7 @@ function scaleBook(){
 window.addEventListener("resize", scaleBook);
 scaleBook();
 
-/* Safari-safe Fullscreen */
+/* Fullscreen Safari-safe */
 const overlay = document.getElementById("startOverlay");
 const exitBtn = document.getElementById("exitBtn");
 
@@ -146,21 +194,17 @@ function isIOS() {
 }
 
 overlay.addEventListener("click", () => {
-
     overlay.style.display = "none";
     exitBtn.style.display = "block";
-
     if (!isIOS()) {
         document.documentElement.requestFullscreen();
     }
 });
 
 exitBtn.addEventListener("click", () => {
-
     if (!isIOS()) {
         document.exitFullscreen();
     }
-
     overlay.style.display = "flex";
     exitBtn.style.display = "none";
 });
