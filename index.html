@@ -72,44 +72,29 @@ body{
 /* Halaman */
 .page{
     position:relative;
-    background:#f4f1ea;
-    border:0px solid #e5e2dc;
-    box-shadow:0 0 25px rgba(0,0,0,0.15);
+    background:white;
+    box-shadow:0 15px 40px rgba(0,0,0,0.25);
 }
 
-/* Crease tengah subtle */
-.page::before{
+/* Crease lebih agresif */
+.page::after{
     content:"";
     position:absolute;
     top:0;
     bottom:0;
     left:0;
-    width:60px;
-    background:linear-gradient(
-        to right,
-        rgba(0,0,0,0.08),
-        rgba(0,0,0,0.03),
-        transparent
-    );
+    width:70px;
     pointer-events:none;
-}
-
-/* Matte texture halus */
-.page::after{
-    content:"";
-    position:absolute;
-    inset:0;
     background:
-        repeating-linear-gradient(
-            0deg,
-            rgba(0,0,0,0.015) 0px,
-            rgba(0,0,0,0.015) 1px,
-            transparent 1px,
-            transparent 3px
+        linear-gradient(
+            to right,
+            rgba(0,0,0,0.35) 0%,
+            rgba(0,0,0,0.18) 20%,
+            rgba(0,0,0,0.08) 40%,
+            rgba(255,255,255,0.25) 65%,
+            rgba(255,255,255,0.0) 100%
         );
-    pointer-events:none;
 }
-
 .page img{
     width:100%;
     height:100%;
@@ -212,4 +197,5 @@ exitBtn.addEventListener("click", () => {
 
 </body>
 </html>
+
 
