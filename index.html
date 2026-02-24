@@ -94,7 +94,7 @@ html,body{
     position:fixed;
     inset:0;
     width:100vw;
-    height:100dvh; /* FIX iOS */
+    height:100dvh;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -111,13 +111,56 @@ html,body{
 }
 
 .page{
+    position:relative;
     background:white;
+    box-shadow:0 15px 40px rgba(0,0,0,0.25);
+}
+
+/* ===== CREASE LEFT ===== */
+.page.page-left:not(.page-cover)::after{
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    right:0;
+    width:60px;
+    pointer-events:none;
+    background:
+        linear-gradient(
+            to left,
+            rgba(0,0,0,0.25) 0%,
+            rgba(0,0,0,0.12) 25%,
+            rgba(0,0,0,0.05) 45%,
+            rgba(255,255,255,0.18) 70%,
+            rgba(255,255,255,0.0) 100%
+        );
+}
+
+/* ===== CREASE RIGHT ===== */
+.page.page-right:not(.page-cover)::after{
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    width:60px;
+    pointer-events:none;
+    background:
+        linear-gradient(
+            to right,
+            rgba(0,0,0,0.25) 0%,
+            rgba(0,0,0,0.12) 25%,
+            rgba(0,0,0,0.05) 45%,
+            rgba(255,255,255,0.18) 70%,
+            rgba(255,255,255,0.0) 100%
+        );
 }
 
 .page img{
     width:100%;
     height:100%;
     object-fit:contain;
+    background:white;
 }
 </style>
 </head>
@@ -148,40 +191,35 @@ html,body{
 <script src="page-flip.browser.js"></script>
 
 <script>
-/* ================= FIREFLIES ================= */
+/* ================= SPLASH + FIREFLIES tetap sama ================= */
 
-const canvas = document.getElementById("fireflyCanvas");
-const ctx = canvas.getContext("2d");
+const overlay=document.getElementById("startOverlay");
+const exitBtn=document.getElementById("exitBtn");
+const canvas=document.getElementById("fireflyCanvas");
+const ctx=canvas.getContext("2d");
 
-let w,h;
-let speedMultiplier = 1;
+let w,h,speedMultiplier=1;
 
 function resize(){
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
+    w=canvas.width=window.innerWidth;
+    h=canvas.height=window.innerHeight;
 }
 resize();
 window.addEventListener("resize",resize);
 
 class Firefly{
-    constructor(){ this.reset(); }
+    constructor(){this.reset();}
     reset(){
-        this.size = Math.random()*6+6;
-        this.side = Math.floor(Math.random()*4);
-
-        if(this.side===0){ this.x=-20; this.y=Math.random()*h; }
-        if(this.side===1){ this.x=w+20; this.y=Math.random()*h; }
-        if(this.side===2){ this.x=Math.random()*w; this.y=-20; }
-        if(this.side===3){ this.x=Math.random()*w; this.y=h+20; }
-
+        this.size=Math.random()*6+6;
+        this.x=Math.random()*w;
+        this.y=Math.random()*h;
         this.vx=(Math.random()-0.5)*0.7;
         this.vy=(Math.random()-0.5)*0.7;
     }
     update(){
         this.x+=this.vx*speedMultiplier;
         this.y+=this.vy*speedMultiplier;
-
-        if(this.x<-40||this.x>w+40||this.y<-40||this.y>h+40){
+        if(this.x<0||this.x>w||this.y<0||this.y>h){
             this.reset();
         }
     }
@@ -196,29 +234,18 @@ class Firefly{
 }
 
 const fireflies=[];
-for(let i=0;i<5;i++){
-    fireflies.push(new Firefly());
-}
+for(let i=0;i<5;i++){fireflies.push(new Firefly());}
 
 function animate(){
     ctx.clearRect(0,0,w,h);
-    fireflies.forEach(f=>{
-        f.update();
-        f.draw();
-    });
+    fireflies.forEach(f=>{f.update();f.draw();});
     requestAnimationFrame(animate);
 }
 animate();
 
-/* ================= SPLASH ================= */
-
-const overlay=document.getElementById("startOverlay");
-const exitBtn=document.getElementById("exitBtn");
-
 overlay.addEventListener("click",()=>{
     speedMultiplier=4;
     overlay.classList.add("exit");
-
     setTimeout(()=>{
         overlay.style.display="none";
         canvas.style.display="none";
@@ -226,9 +253,7 @@ overlay.addEventListener("click",()=>{
     },600);
 });
 
-exitBtn.addEventListener("click",()=>{
-    location.reload();
-});
+exitBtn.addEventListener("click",()=>location.reload());
 
 /* ================= ALBUM ================= */
 
@@ -249,7 +274,9 @@ const pageFlip=new St.PageFlip(flipbook,{
     height:600,
     size:"fixed",
     showCover:true,
-    usePortrait:false
+    usePortrait:false,
+    drawShadow:true,
+    maxShadowOpacity:0.45
 });
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
