@@ -54,13 +54,13 @@ html,body{
 
 .title{
     font-family:'Abril Fatface', serif;
-    font-size:28px; /* lebih kecil */
+    font-size:28px;
     margin-bottom:16px;
 }
 
 .subtitle{
     font-family:'Playfair Display', serif;
-    font-weight:400; /* regular */
+    font-weight:400;
     font-size:13px;
     line-height:1.6;
     opacity:0.85;
@@ -75,16 +75,30 @@ html,body{
     pointer-events:none;
 }
 
+/* ================= EXIT BUTTON ================= */
+
+#exitBtn{
+    position:fixed;
+    top:20px;
+    right:20px;
+    font-size:28px;
+    color:white;
+    cursor:pointer;
+    z-index:200;
+    display:none;
+}
+
 /* ================= ALBUM ================= */
 
 .stage{
+    position:fixed;
+    inset:0;
     width:100vw;
-    height:100vh;
+    height:100dvh; /* FIX iOS */
     display:flex;
     justify-content:center;
     align-items:center;
     background: radial-gradient(circle at center, #2e2e2e 0%, #111 100%);
-    z-index:1;
 }
 
 .scale-wrapper{
@@ -123,6 +137,8 @@ html,body{
     </div>
 </div>
 
+<div id="exitBtn">✕</div>
+
 <div class="stage">
     <div class="scale-wrapper">
         <div id="flipbook"></div>
@@ -150,7 +166,7 @@ window.addEventListener("resize",resize);
 class Firefly{
     constructor(){ this.reset(); }
     reset(){
-        this.size = Math.random()*6+6; // lebih besar
+        this.size = Math.random()*6+6;
         this.side = Math.floor(Math.random()*4);
 
         if(this.side===0){ this.x=-20; this.y=Math.random()*h; }
@@ -180,7 +196,7 @@ class Firefly{
 }
 
 const fireflies=[];
-for(let i=0;i<5;i++){  // maksimal 5
+for(let i=0;i<5;i++){
     fireflies.push(new Firefly());
 }
 
@@ -194,9 +210,10 @@ function animate(){
 }
 animate();
 
-/* ================= SPLASH CLICK ================= */
+/* ================= SPLASH ================= */
 
 const overlay=document.getElementById("startOverlay");
+const exitBtn=document.getElementById("exitBtn");
 
 overlay.addEventListener("click",()=>{
     speedMultiplier=4;
@@ -205,7 +222,12 @@ overlay.addEventListener("click",()=>{
     setTimeout(()=>{
         overlay.style.display="none";
         canvas.style.display="none";
+        exitBtn.style.display="block";
     },600);
+});
+
+exitBtn.addEventListener("click",()=>{
+    location.reload();
 });
 
 /* ================= ALBUM ================= */
@@ -243,4 +265,3 @@ scaleBook();
 
 </body>
 </html>
-
