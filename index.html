@@ -97,27 +97,39 @@ const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
 
 /* ===================== */
-/* ULTRA FAST AUDIO (Web Audio API) */
+/* SAFARI SAFE WEB AUDIO */
 /* ===================== */
 
-let audioContext;
+let audioContext = null;
 let flipBuffer = null;
+let audioReady = false;
 
-async function initAudio() {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+async function setupAudio() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-    const response = await fetch("sounds/flip3.mp3");
-    const arrayBuffer = await response.arrayBuffer();
-    flipBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        const response = await fetch("sounds/flip3.mp3");
+        const arrayBuffer = await response.arrayBuffer();
+        flipBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        if (audioContext.state === "suspended") {
+            await audioContext.resume();
+        }
+
+        audioReady = true;
+        console.log("Audio ready");
+    } catch (err) {
+        console.log("Audio failed:", err);
+    }
 }
 
 function playFlipSound() {
-    if (!flipBuffer || !audioContext) return;
+    if (!audioReady || !flipBuffer) return;
 
     const source = audioContext.createBufferSource();
-    source.buffer = flipBuffer;
-
     const gainNode = audioContext.createGain();
+
+    source.buffer = flipBuffer;
     gainNode.gain.value = 0.25;
 
     source.connect(gainNode);
@@ -183,7 +195,10 @@ function scaleBook(){
 window.addEventListener("resize", scaleBook);
 scaleBook();
 
-/* Fullscreen + Init Audio */
+/* ===================== */
+/* FULLSCREEN + INIT AUDIO */
+/* ===================== */
+
 const overlay = document.getElementById("startOverlay");
 const exitBtn = document.getElementById("exitBtn");
 
@@ -196,12 +211,8 @@ overlay.addEventListener("click", async () => {
     overlay.style.display = "none";
     exitBtn.style.display = "block";
 
-    if (!audioContext) {
-        await initAudio();
-    }
-
-    if (audioContext.state === "suspended") {
-        await audioContext.resume();
+    if (!audioReady) {
+        await setupAudio();
     }
 
     if (!isIOS()) {
