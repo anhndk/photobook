@@ -135,22 +135,44 @@ const flipbook = document.getElementById("flipbook");
 const wrapper = document.querySelector(".scale-wrapper");
 
 /* ===================== */
-/* SOUND SETUP */
+/* SOUND SETUP - SAFARI PROOF */
 /* ===================== */
 
 const flipSounds = [
     new Audio("sounds/flip1.mp3"),
-    new Audio("sounds/flip2.mp3"),
-    new Audio("sounds/flip3.mp3")
+    new Audio("sounds/flip1.mp3"),
+    new Audio("sounds/flip1.mp3")
 ];
 
+let audioUnlocked = false;
+
 flipSounds.forEach(sound => {
-    sound.volume = 0.25; // subtle
+    sound.volume = 0.25;
+    sound.preload = "auto";
 });
 
+function unlockAudio() {
+    if (audioUnlocked) return;
+
+    flipSounds.forEach(sound => {
+        const playPromise = sound.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                sound.pause();
+                sound.currentTime = 0;
+            }).catch(() => {});
+        }
+    });
+
+    audioUnlocked = true;
+}
+
 function playFlipSound(){
+    if (!audioUnlocked) return;
+
     const randomIndex = Math.floor(Math.random() * flipSounds.length);
     const sound = flipSounds[randomIndex];
+
     sound.currentTime = 0;
     sound.play();
 }
@@ -184,7 +206,6 @@ const pageFlip = new St.PageFlip(flipbook, {
 
 pageFlip.loadFromHTML(document.querySelectorAll(".page"));
 
-/* Play sound saat flip selesai */
 pageFlip.on("flip", () => {
     playFlipSound();
 });
@@ -210,7 +231,10 @@ function scaleBook(){
 window.addEventListener("resize", scaleBook);
 scaleBook();
 
-/* Fullscreen */
+/* ===================== */
+/* FULLSCREEN + AUDIO UNLOCK */
+/* ===================== */
+
 const overlay = document.getElementById("startOverlay");
 const exitBtn = document.getElementById("exitBtn");
 
@@ -219,8 +243,12 @@ function isIOS() {
 }
 
 overlay.addEventListener("click", () => {
+
+    unlockAudio(); // penting untuk Safari
+
     overlay.style.display = "none";
     exitBtn.style.display = "block";
+
     if (!isIOS()) {
         document.documentElement.requestFullscreen();
     }
