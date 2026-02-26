@@ -358,7 +358,7 @@ function scaleBook(){
 window.addEventListener("resize",scaleBook);
 scaleBook();
 
-/* ================= PROFESSIONAL ZOOM ENGINE ================= */
+/* ================= FIXED ZOOM ENGINE ================= */
 
 let scale=1;
 let posX=0,posY=0;
@@ -377,6 +377,9 @@ function getDistance(t){
 
 function apply(){
     flipbook.style.transform=`translate(${posX}px,${posY}px) scale(${scale})`;
+    if(scale>1){
+        pageFlip.disable();
+    }
 }
 
 flipbook.addEventListener("touchstart",e=>{
@@ -384,7 +387,6 @@ flipbook.addEventListener("touchstart",e=>{
         isPinching=true;
         startDist=getDistance(e.touches);
         startScale=scale;
-        pageFlip.disable();
     }
     if(e.touches.length===1 && scale>1){
         isDragging=true;
@@ -396,19 +398,8 @@ flipbook.addEventListener("touchstart",e=>{
 flipbook.addEventListener("touchmove",e=>{
     if(isPinching && e.touches.length===2){
         e.preventDefault();
-
         const newDist=getDistance(e.touches);
-        let newScale=startScale*(newDist/startDist);
-        newScale=Math.min(Math.max(1,newScale),3);
-
-        const rect=flipbook.getBoundingClientRect();
-        const centerX=(e.touches[0].clientX+e.touches[1].clientX)/2 - rect.left;
-        const centerY=(e.touches[0].clientY+e.touches[1].clientY)/2 - rect.top;
-
-        posX -= (centerX)*(newScale-scale)/newScale;
-        posY -= (centerY)*(newScale-scale)/newScale;
-
-        scale=newScale;
+        scale=Math.min(Math.max(1,startScale*(newDist/startDist)),3);
         apply();
     }
 
@@ -426,7 +417,7 @@ flipbook.addEventListener("touchend",()=>{
         posX=0;
         posY=0;
         flipbook.style.transition="transform .25s ease";
-        apply();
+        flipbook.style.transform="translate(0px,0px) scale(1)";
         setTimeout(()=>{
             flipbook.style.transition="none";
             pageFlip.enable();
