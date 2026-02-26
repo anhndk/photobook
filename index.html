@@ -358,7 +358,7 @@ function scaleBook(){
 window.addEventListener("resize",scaleBook);
 scaleBook();
 
-/* ================= FIXED ZOOM ENGINE ================= */
+/* ================= FIXED ZOOM ENGINE (HARD BLOCK) ================= */
 
 let scale=1;
 let posX=0,posY=0;
@@ -377,41 +377,55 @@ function getDistance(t){
 
 function apply(){
     flipbook.style.transform=`translate(${posX}px,${posY}px) scale(${scale})`;
-    if(scale>1){
-        pageFlip.disable();
-    }
 }
 
 flipbook.addEventListener("touchstart",e=>{
+
+    if(scale>1){
+        e.stopImmediatePropagation();
+    }
+
     if(e.touches.length===2){
         isPinching=true;
         startDist=getDistance(e.touches);
         startScale=scale;
     }
+
     if(e.touches.length===1 && scale>1){
         isDragging=true;
         startX=e.touches[0].clientX-posX;
         startY=e.touches[0].clientY-posY;
     }
+
 },{passive:false});
 
 flipbook.addEventListener("touchmove",e=>{
-    if(isPinching && e.touches.length===2){
+
+    if(scale>1){
+        e.stopImmediatePropagation();
         e.preventDefault();
+    }
+
+    if(isPinching && e.touches.length===2){
         const newDist=getDistance(e.touches);
         scale=Math.min(Math.max(1,startScale*(newDist/startDist)),3);
         apply();
     }
 
     if(isDragging && e.touches.length===1 && scale>1){
-        e.preventDefault();
         posX=e.touches[0].clientX-startX;
         posY=e.touches[0].clientY-startY;
         apply();
     }
+
 },{passive:false});
 
-flipbook.addEventListener("touchend",()=>{
+flipbook.addEventListener("touchend",e=>{
+
+    if(scale>1){
+        e.stopImmediatePropagation();
+    }
+
     if(scale<=1){
         scale=1;
         posX=0;
@@ -420,9 +434,9 @@ flipbook.addEventListener("touchend",()=>{
         flipbook.style.transform="translate(0px,0px) scale(1)";
         setTimeout(()=>{
             flipbook.style.transition="none";
-            pageFlip.enable();
         },250);
     }
+
     isPinching=false;
     isDragging=false;
 });
