@@ -172,6 +172,7 @@ html,body{
     width:1308px; 
     height:600px; 
     touch-action:none;
+    transform-origin:center center;
 }
 
 .page{
@@ -227,27 +228,20 @@ html,body{
 
 <script>
 
-/* ================= FULLSCREEN FUNCTION ================= */
+/* ================= FULLSCREEN ================= */
 
 function requestFullscreen(){
     const el=document.documentElement;
-    if(el.requestFullscreen){
-        el.requestFullscreen();
-    }else if(el.webkitRequestFullscreen){
-        el.webkitRequestFullscreen();
-    }else if(el.msRequestFullscreen){
-        el.msRequestFullscreen();
-    }
+    if(el.requestFullscreen){ el.requestFullscreen(); }
+    else if(el.webkitRequestFullscreen){ el.webkitRequestFullscreen(); }
+    else if(el.msRequestFullscreen){ el.msRequestFullscreen(); }
 }
 
-/* ================= AMBIENT SOUND ================= */
+/* ================= AUDIO ================= */
 
 const ambientAudio=document.getElementById("ambientAudio");
 ambientAudio.volume=0.4;
-
-function unlockAudio(){
-    ambientAudio.play().catch(()=>{});
-}
+function unlockAudio(){ ambientAudio.play().catch(()=>{}); }
 
 /* ================= FIREFLIES ================= */
 
@@ -363,42 +357,33 @@ function scaleBook(){
 window.addEventListener("resize",scaleBook);
 scaleBook();
 
-/* ================= ADVANCED PINCH ZOOM ================= */
+/* ================= FINAL ZOOM ENGINE ================= */
 
-let currentScale=1;
-let targetScale=1;
-let posX=0;
-let posY=0;
-let startX=0;
-let startY=0;
+let scale=1;
 let startDist=0;
-let isDragging=false;
+let lastScale=1;
+let posX=0,posY=0;
+let startX=0,startY=0;
+let dragging=false;
 
-function getDistance(touches){
+function getDistance(t){
     return Math.hypot(
-        touches[0].clientX - touches[1].clientX,
-        touches[0].clientY - touches[1].clientY
+        t[0].clientX - t[1].clientX,
+        t[0].clientY - t[1].clientY
     );
 }
 
-function applyTransform(){
-    flipbook.style.transform=`translate(${posX}px,${posY}px) scale(${currentScale})`;
-    flipbook.style.transformOrigin="center center";
+function apply(){
+    flipbook.style.transform=`translate(${posX}px,${posY}px) scale(${scale})`;
 }
-
-function smoothZoom(){
-    currentScale += (targetScale-currentScale)*0.15;
-    applyTransform();
-    requestAnimationFrame(smoothZoom);
-}
-smoothZoom();
 
 flipbook.addEventListener("touchstart",e=>{
     if(e.touches.length===2){
         startDist=getDistance(e.touches);
+        lastScale=scale;
     }
-    if(e.touches.length===1 && currentScale>1){
-        isDragging=true;
+    if(e.touches.length===1 && scale>1){
+        dragging=true;
         startX=e.touches[0].clientX-posX;
         startY=e.touches[0].clientY-posY;
     }
@@ -407,33 +392,35 @@ flipbook.addEventListener("touchstart",e=>{
 flipbook.addEventListener("touchmove",e=>{
     if(e.touches.length===2){
         e.preventDefault();
-        let newDist=getDistance(e.touches);
-        let scaleFactor=newDist/startDist;
-        targetScale=Math.min(Math.max(1,currentScale*scaleFactor),3);
-        startDist=newDist;
+        const newDist=getDistance(e.touches);
+        scale=Math.min(Math.max(1,lastScale*(newDist/startDist)),3);
 
-        if(targetScale>1){
+        if(scale>1){
             pageFlip.disable();
         }else{
             pageFlip.enable();
         }
+
+        apply();
     }
 
-    if(e.touches.length===1 && isDragging && currentScale>1){
+    if(e.touches.length===1 && dragging && scale>1){
         e.preventDefault();
         posX=e.touches[0].clientX-startX;
         posY=e.touches[0].clientY-startY;
+        apply();
     }
 },{passive:false});
 
 flipbook.addEventListener("touchend",()=>{
-    if(targetScale<=1.01){
-        targetScale=1;
+    if(scale<=1){
+        scale=1;
         posX=0;
         posY=0;
         pageFlip.enable();
+        apply();
     }
-    isDragging=false;
+    dragging=false;
 });
 
 </script>
